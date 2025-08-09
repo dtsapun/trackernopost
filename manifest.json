@@ -1,5 +1,5 @@
 {
-  "name": "Dima is watching you",
+  "name": "Dima is watching you [No POST]",
   "short_name": "Tracker",
   "start_url": "./index.html",
   "display": "standalone",
@@ -17,4 +17,5 @@
       "type": "image/png"
     }
   ]
+
 }
