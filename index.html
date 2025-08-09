@@ -5,15 +5,54 @@
 <meta name="theme-color" content="#ffffff">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Clicker + Stopwatch + TOTP</title>
+<!--- Присвячується всім полеглим захисникам незалежності України. Борімося - поборемо. -->
+<title>Tracker without posts</title>
 <style>
-  body { font-family: monospace; background: #f7f7f7; margin:0; padding:0; }
-  #container { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 8px; width: 150px; }
+  body {
+    font-family: monospace;
+    background: #f7f7f7;
+    margin:0;
+    padding:0;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    height: 100vh;
+    transition: all 0.2s ease;
+  }
+  body.right-align {
+    justify-content: flex-end;
+  }
+  #container {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px;
+    width: 150px;
+    margin: 8px;
+    position: relative;
+  }
+  #posToggle {
+    position: absolute;
+    top: -10px;
+    font-size: 12px;
+    padding: 2px 5px;
+    background: #eee;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  body:not(.right-align) #posToggle {
+    right: -10px;
+    left: auto;
+  }
+  body.right-align #posToggle {
+    left: -10px;
+    right: auto;
+  }
   .row { display:flex; gap:6px; margin-bottom:6px; }
   .col { flex:1; display:flex; flex-direction:column; gap:4px; }
   .col button { width:100%; padding:6px; font-size:13px; cursor:pointer; }
-  .col input { width:100%; padding:6px; box-sizing:border-box; text-align:center; font-size:13px; }
-  /* totals */
+  .col input { width:100%; padding:3px; box-sizing:border-box; text-align:center; font-size:13px; }
   #totalsRow { display:flex; align-items:flex-start; justify-content:space-between; gap:4px;
     background:#fafafa; border:1px solid #ccc; padding:4px; border-radius:4px; margin-bottom:6px; font-size:12px; }
   .totalsLeft { display:flex; flex-direction:column; gap:4px; }
@@ -23,11 +62,9 @@
   .totalsRight { display:flex; flex-direction:column; gap:4px; align-items:stretch; }
   .rightTop { display:flex; gap:4px; }
   #resetAll, #toggleStopwatch, #toggleTotp { flex:1; font-size:11px; padding:4px 5px; cursor:pointer; background:#eee; border:1px solid #ccc; border-radius:4px; text-align:center; }
-  /* stopwatch row */
   #stopwatchRow { display:flex; flex-direction:column; align-items:center; gap:4px; margin:6px 0; }
   #stopwatch { font-size:17px; font-weight:700; min-width:62px; text-align:center; }
   #pause { width:100%; font-size:12px; padding:5px 6px; cursor:pointer; background:#eee; border:1px solid #ccc; border-radius:4px; }
-  /* TOTP container */
   #totpContainer { margin-top:6px; border-top:1px solid #ddd; padding-top:6px; display:none; }
   #totpSecret { width:100%; padding:5px; box-sizing:border-box; font-family:monospace; font-size:12px; }
   #totpCode { margin-top:4px; font-family:monospace; font-size:16px; font-weight:700; letter-spacing:4px;
@@ -37,6 +74,8 @@
 </head>
 <body>
 <div id="container">
+  <button id="posToggle">↔</button>
+
   <div class="row">
     <div class="col">
       <button id="btn1">VID</button>
@@ -76,6 +115,25 @@
 
 <script>
 (function(){
+  const posToggle = document.getElementById('posToggle');
+  const POSITION_KEY = 'blockPosition_noPosts';
+  
+  function applyPosition(pos) {
+    if (pos === 'right') {
+      document.body.classList.add('right-align');
+    } else {
+      document.body.classList.remove('right-align');
+    }
+    localStorage.setItem(POSITION_KEY, pos);
+  }
+  
+  posToggle.addEventListener('click', () => {
+    const current = localStorage.getItem(POSITION_KEY) || 'left';
+    applyPosition(current === 'left' ? 'right' : 'left');
+  });
+  
+  applyPosition(localStorage.getItem(POSITION_KEY) || 'left');
+
   const btn1 = document.getElementById('btn1');
   const btn2 = document.getElementById('btn2');
   const click1 = document.getElementById('click1');
@@ -122,7 +180,6 @@
   toggleStopwatch.onclick = () => { stopwatchRow.style.display = getComputedStyle(stopwatchRow).display === 'none' ? 'flex' : 'none'; saveState(); };
   resetAll.onclick = () => { click1.value = 0; click2.value = 0; updateTotals(); pauseStopwatch(); };
 
-  // TOTP
   function base32ToHex(base32){
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"; let bits="", hex="";
     base32 = (base32||"").replace(/\s+/g,'').replace(/=+$/,'').toUpperCase();
@@ -181,8 +238,7 @@
     }
   });
 
-  // storage
-  const KEY='appState_v10';
+  const KEY='appState_v10_noPosts';
   function saveState(){
     const elapsed = swRunning ? (Date.now()-swStart) : swElapsed;
     localStorage.setItem(KEY, JSON.stringify({
